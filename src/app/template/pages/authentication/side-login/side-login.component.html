@@ -1,0 +1,98 @@
+<div
+  class="flex h-screen w-full items-center justify-center overflow-hidden p-2"
+>
+  <mat-card class="cardWithShadow overflow-hidden auth-card mx-auto mb-0">
+    <div class="grid grid-cols-12 gap-6">
+      <div class="lg:col-span-6 col-span-12 flex items-stretch">
+        <div class="w-full p-10 flex flex-col justify-center aling-center">
+          <div class="text-center text-lg font-semibold">
+            Acceso a la plantilla
+          </div>
+
+          <form class="mt-8" [formGroup]="form" (ngSubmit)="submit()">
+            <mat-label
+              class="mat-subtitle-2 text-sm font-semibold mb-3 block text-start"
+            >
+              Usuario
+            </mat-label>
+            <mat-form-field appearance="outline" class="w-full" color="primary">
+              <input
+                matInput
+                formControlName="uname"
+                placeholder="Ingrese su usuario"
+              />
+              <mat-error *ngIf="f.uname.touched && f.uname.invalid">
+                El usuario es obligatorio (mínimo 6 caracteres)
+              </mat-error>
+            </mat-form-field>
+
+            <mat-label
+              class="mat-subtitle-2 text-sm font-semibold mb-3 block text-start"
+            >
+              Contraseña
+            </mat-label>
+            <mat-form-field appearance="outline" class="w-full" color="primary">
+              <input
+                matInput
+                type="password"
+                formControlName="password"
+                placeholder="Ingrese su contraseña"
+              />
+              <mat-error *ngIf="f.password.touched && f.password.invalid">
+                La contraseña es obligatoria
+              </mat-error>
+            </mat-form-field>
+
+            <div class="flex items-center justify-between mb-3">
+              <mat-checkbox color="primary">
+                Recordar este dispositivo
+              </mat-checkbox>
+              <a
+                [routerLink]="['/']"
+                class="text-primary font-semibold no-underline text-sm"
+              >
+                ¿Olvidó su contraseña?
+              </a>
+            </div>
+
+            <!-- BOTÓN INGRESAR -->
+            <button
+              type="submit"
+              mat-flat-button
+              color="primary"
+              class="w-full"
+              [disabled]="loading"
+            >
+              Ingresar
+            </button>
+
+            <!-- ERROR LOGIN -->
+            <div *ngIf="error" class="text-red-500 text-sm mt-3 text-center">
+              {{ error }}
+            </div>
+          </form>
+
+          <span class="block font-medium text-center mt-6">
+            ¿No tiene una cuenta?
+            <a
+              [routerLink]="['/authentication/register']"
+              class="no-underline text-primary font-medium text-sm"
+            >
+              Crear cuenta
+            </a>
+          </span>
+        </div>
+      </div>
+
+      <div
+        class="lg:col-span-6 col-span-12 relative hidden lg:flex items-center justify-center bg-light p-5"
+      >
+        <img
+          src="/assets/images/backgrounds/logo_login.jpeg"
+          alt="Asemaq"
+          class="max-h-[320px] max-w-[420px] w-auto object-contain"
+        />
+      </div>
+    </div>
+  </mat-card>
+</div>
