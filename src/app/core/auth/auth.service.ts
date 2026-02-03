@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-const TOKEN_KEY = 'asemaq_token';
+const TOKEN_KEY = 'aira_token';
 
 @Injectable({
   providedIn: 'root',

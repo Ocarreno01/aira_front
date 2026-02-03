@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "asemaq-front": {
+    "aira-front": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -19,7 +19,7 @@
           "options": {
             "allowedCommonJsDependencies": ["bezier-easing"],
             "outputPath": {
-              "base": "dist/asemaq-front"
+              "base": "dist/aira-front"
             },
             "index": "src/index.html",
             "polyfills": ["zone.js"],
@@ -63,10 +63,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "asemaq-front:build:production"
+              "buildTarget": "aira-front:build:production"
             },
             "development": {
-              "buildTarget": "asemaq-front:build:development"
+              "buildTarget": "aira-front:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -74,7 +74,7 @@
         "extract-i18n": {
           "builder": "@angular/build:extract-i18n",
           "options": {
-            "buildTarget": "asemaq-front:build"
+            "buildTarget": "aira-front:build"
           }
         },
         "test": {
