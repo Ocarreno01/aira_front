@@ -7,7 +7,7 @@
         <div class="w-full p-10 flex flex-col justify-center aling-center">
           <div class="text-center text-lg font-semibold">Acceso al sistema</div>
 
-          <form class="mt-8" [formGroup]="form" (ngSubmit)="submit()">
+          <form class="mt-8" [formGroup]="loginForm" (ngSubmit)="submit()">
             <mat-label
               class="mat-subtitle-2 text-sm font-semibold mb-3 block text-start"
             >
@@ -41,7 +41,8 @@
               </mat-error>
             </mat-form-field>
 
-            <div class="flex items-center justify-between mb-3">
+            <!-- TODO: ¿Implementar? -->
+            <!-- <div class="flex items-center justify-between mb-3">
               <mat-checkbox color="primary">
                 Recordar este dispositivo
               </mat-checkbox>
@@ -51,7 +52,7 @@
               >
                 ¿Olvidó su contraseña?
               </a>
-            </div>
+            </div> -->
 
             <!-- BOTÓN INGRESAR -->
             <button

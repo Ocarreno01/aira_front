@@ -1,5 +1,5 @@
 import { Component, ViewEncapsulation } from '@angular/core';
-import { MaterialModule } from '../../material.module';
+import { MaterialModule } from '../../../../material.module';
 import { AppRevenueUpdatesComponent } from 'src/app/template/components/revenue-updates/revenue-updates.component';
 import { AppYearlyBreakupComponent } from 'src/app/template/components/yearly-breakup/yearly-breakup.component';
 import { AppMonthlyEarningsComponent } from 'src/app/template/components/monthly-earnings/monthly-earnings.component';

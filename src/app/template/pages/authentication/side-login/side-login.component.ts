@@ -4,7 +4,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { MaterialModule } from 'src/app/core/material.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import { AuthService } from '../../../../core/auth/auth.service';
+import { AuthService } from '../../../../core/features/authentication/services/auth.service';
 import { CommonModule } from '@angular/common';
 
 @Component({

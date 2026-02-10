@@ -6,6 +6,7 @@ import {
 import {
   provideHttpClient,
   withInterceptorsFromDi,
+  HTTP_INTERCEPTORS,
 } from '@angular/common/http';
 import { routes } from './app.routes';
 import {
@@ -17,6 +18,8 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+
+import { AuthInterceptor } from './http/auth.interceptor';
 
 // icons
 import { TablerIconsModule } from 'angular-tabler-icons';
@@ -32,6 +35,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
+
     provideRouter(
       routes,
       withInMemoryScrolling({
@@ -40,9 +44,18 @@ export const appConfig: ApplicationConfig = {
       }),
       withComponentInputBinding(),
     ),
+
     provideHttpClient(withInterceptorsFromDi()),
+
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
+
     provideClientHydration(),
     provideAnimationsAsync(),
+
     importProvidersFrom(
       FormsModule,
       ReactiveFormsModule,
@@ -50,6 +63,7 @@ export const appConfig: ApplicationConfig = {
       TablerIconsModule.pick(TablerIcons),
       NgScrollbarModule,
     ),
+
     provideTranslateService(),
     provideTranslateHttpLoader({
       prefix: './assets/i18n/',

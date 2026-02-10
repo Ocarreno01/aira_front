@@ -4,7 +4,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { MaterialModule } from 'src/app/core/material.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import { AuthService } from '../../../../core/auth/auth.service';
+import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -29,20 +29,20 @@ export class AppSideLoginComponent {
   public loading = false;
   public error = '';
 
-  form = new FormGroup({
+  public loginForm = new FormGroup({
     uname: new FormControl('', [Validators.required, Validators.minLength(6)]),
     password: new FormControl('', [Validators.required]),
   });
 
   get f() {
-    return this.form.controls;
+    return this.loginForm.controls;
   }
 
   public async submit(): Promise<void> {
     this.error = '';
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       return;
     }
 

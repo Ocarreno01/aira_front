@@ -29,7 +29,6 @@ export class AuthService {
    */
   public async login(username: string, password: string): Promise<boolean> {
     if (username && password) {
-      // TODO: cambiar por token real del backend
       this.setToken('mvp-token');
       return true;
     }

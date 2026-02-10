@@ -20,7 +20,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TablerIconsModule } from 'angular-tabler-icons';
 import { MaterialModule } from 'src/app/core/material.module';
 import { CommonModule } from '@angular/common';
-import { NavService } from 'src/app/core/services/nav.service';
+import { NavService } from 'src/app/core/features/common/services/nav.service';
 
 @Component({
   selector: 'app-nav-item',

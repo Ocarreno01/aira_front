@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
 
-import { AppSideLoginComponent } from './side-login/side-login.component';
-import { AppSideRegisterComponent } from './side-register/side-register.component';
+import { AppSideLoginComponent } from './pages/side-login/side-login.component';
+import { AppSideRegisterComponent } from './pages/side-register/side-register.component';
 
-import { GuestGuard } from '../../../core/auth/guest.guard';
+import { GuestGuard } from '../../auth/guest.guard';
 
 export const AuthenticationRoutes: Routes = [
   {

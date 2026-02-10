@@ -8,11 +8,11 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { MatSidenav, MatSidenavContent } from '@angular/material/sidenav';
-import { CoreService } from 'src/app/core/services/core.service';
+import { CoreService } from 'src/app/core/features/common/services/core.service';
 import { AppSettings } from 'src/app/core/config';
 import { filter } from 'rxjs/operators';
 import { NavigationEnd, Router } from '@angular/router';
-import { NavService } from '../../services/nav.service';
+import { NavService } from '../../features/common/services/nav.service';
 import { RouterModule } from '@angular/router';
 import { MaterialModule } from 'src/app/core/material.module';
 import { CommonModule } from '@angular/common';

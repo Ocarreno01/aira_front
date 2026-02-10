@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { AppSettings, defaults } from '../../core/config';
+import { AppSettings, defaults } from '../../../config';
 
 @Injectable({
   providedIn: 'root',

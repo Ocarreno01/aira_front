@@ -18,7 +18,9 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadChildren: () =>
-          import('./pages/pages.routes').then((m) => m.PagesRoutes),
+          import('./features/dashboard/pages.routes').then(
+            (m) => m.DashboardRoutes,
+          ),
       },
     ],
   },
@@ -29,7 +31,7 @@ export const routes: Routes = [
       {
         path: 'authentication',
         loadChildren: () =>
-          import('./pages/authentication/authentication.routes').then(
+          import('./features/authentication/authentication.routes').then(
             (m) => m.AuthenticationRoutes,
           ),
       },

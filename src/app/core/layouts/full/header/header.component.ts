@@ -12,7 +12,7 @@ import { MaterialModule } from 'src/app/core/material.module';
 import { NgScrollbarModule } from 'ngx-scrollbar';
 import { AppSettings } from 'src/app/core/config';
 
-import { AuthService } from 'src/app/core/auth/auth.service';
+import { AuthService } from 'src/app/core/features/authentication/services/auth.service';
 
 @Component({
   selector: 'app-header',
