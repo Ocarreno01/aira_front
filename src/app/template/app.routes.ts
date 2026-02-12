@@ -8,11 +8,11 @@ export const routes: Routes = [
   {
     path: 'template',
     component: FullComponent,
-    canActivate: [AuthGuard],
+    canActivate: [],
     children: [
       {
         path: '',
-        redirectTo: '/dashboard-template',
+        redirectTo: '/template/dashboard-template',
         pathMatch: 'full',
       },
       {

@@ -22,6 +22,13 @@ export const routes: Routes = [
             (m) => m.DashboardRoutes,
           ),
       },
+      {
+        path: 'projects',
+        loadChildren: () =>
+          import('./features/projects/projects.routes').then(
+            (m) => m.ProjectsRoutes,
+          ),
+      },
     ],
   },
   {

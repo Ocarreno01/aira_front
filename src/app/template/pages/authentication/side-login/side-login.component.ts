@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { MaterialModule } from 'src/app/core/material.module';
+import { MaterialModule } from 'src/app/template/material.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import { AuthService } from '../../../../core/features/authentication/services/auth.service';
+import { AuthService } from '../../../../template/auth/auth.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
