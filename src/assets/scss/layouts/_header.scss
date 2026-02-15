@@ -5,18 +5,9 @@ html .topbar {
   top: 0;
   z-index: 9;
   height: $header-height;
-
+  background-color: rgb(249, 249, 249);
   i-tabler {
     stroke-width: 1.5px;
-  }
-
-  .notification-badge {
-    .mat-badge-content {
-      left: 80%;
-      bottom: 85%;
-      width: 16px;
-      height: 16px;
-    }
   }
 }
 

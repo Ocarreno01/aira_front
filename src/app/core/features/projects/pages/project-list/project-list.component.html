@@ -1,6 +1,186 @@
-<mat-card class="cardWithShadow">
-  <mat-card-content>
-    <mat-card-title>Sample Page</mat-card-title>
-    <mat-card-subtitle>This is test page</mat-card-subtitle>
+<mat-card class="cardWithShadow theme-card">
+  <div class="p-6 flex items-center justify-between">
+    <mat-card-title class="mb-0"> Listado de proyectos </mat-card-title>
+
+    <button mat-flat-button color="primary">Nuevo proyecto</button>
+  </div>
+
+  <mat-card-content class="border-t border-border">
+    <div class="relative overflow-auto">
+      <table mat-table [dataSource]="dataSourceProjectList" class="min-w-full">
+        <ng-container matColumnDef="client">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="font-semibold text-sm pl-0!"
+          >
+            Cliente
+          </th>
+          <td
+            class="whitespace-nowrap"
+            mat-cell
+            *matCellDef="let element"
+            class="pl-0!"
+          >
+            <div class="flex items-center gap-4">
+              <h6 class="text-sm font-semibold">
+                {{ element.clientName }}
+              </h6>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="seller">
+          <th mat-header-cell *matHeaderCellDef class="font-semibold text-sm">
+            Vendedor
+          </th>
+          <td class="whitespace-nowrap" mat-cell *matCellDef="let element">
+            <div class="flex items-center gap-4">
+              <h6 class="text-sm font-semibold">
+                {{ element.sellerName }}
+              </h6>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="businessType">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="font-semibold text-sm text-center!"
+          >
+            Tipo de negocio
+          </th>
+          <td
+            class="whitespace-nowrap"
+            mat-cell
+            *matCellDef="let element"
+            class="text-center!"
+          >
+            <div class="flex items-center gap-4">
+              <h6 class="text-sm font-semibold">
+                {{ element.businessType }}
+              </h6>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="stimatedAmount">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="font-semibold text-sm text-center!"
+          >
+            Valor estimado
+          </th>
+          <td
+            class="whitespace-nowrap"
+            mat-cell
+            *matCellDef="let element"
+            class="text-center!"
+          >
+            <div class="flex items-center gap-4">
+              <h6 class="text-sm font-semibold">
+                {{ element.estimatedAmount | currency: "COP" }}
+              </h6>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="font-semibold text-sm text-center!"
+          >
+            Estado
+          </th>
+          <td
+            class="whitespace-nowrap"
+            mat-cell
+            *matCellDef="let element"
+            class="text-center!"
+          >
+            @if (element.status == "oportunidad") {
+              <span
+                class="bg-light-warning text-warning rounded font-semibold p-6 py-1 text-xs"
+              >
+                {{ element.status | titlecase }}
+              </span>
+            }
+            @if (element.status == "cotizacion_enviada") {
+              <span
+                class="bg-light-error text-error rounded font-semibold p-6 py-1 text-xs"
+              >
+                {{ element.status | titlecase }}
+              </span>
+            }
+            @if (element.status == "en_negociacion") {
+              <span
+                class="bg-light-success text-success rounded font-semibold p-6 py-1 text-xs"
+              >
+                {{ element.status | titlecase }}
+              </span>
+            }
+            @if (element.status == "vendido") {
+              <span
+                class="bg-light-success text-success rounded font-semibold p-6 py-1 text-xs"
+              >
+                {{ element.status | titlecase }}
+              </span>
+            }
+            @if (element.status == "facturado") {
+              <span
+                class="bg-light-success text-success rounded font-semibold p-6 py-1 text-xs"
+              >
+                {{ element.status | titlecase }}
+              </span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="options">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            class="font-semibold text-sm"
+          ></th>
+          <td
+            class="whitespace-nowrap"
+            mat-cell
+            *matCellDef="let element"
+            class="text-end!"
+          >
+            <button
+              mat-icon-button
+              [matMenuTriggerFor]="menu"
+              aria-label="Example icon-button with a menu"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item>
+                <mat-icon>edit</mat-icon>
+                <span>Editar</span>
+              </button>
+              <button mat-menu-item>
+                <mat-icon>bolt</mat-icon>
+                <span>Ver negociación</span>
+              </button>
+              <button mat-menu-item>
+                <mat-icon>delete</mat-icon>
+                <span>Borrar</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumnsProjectList"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumnsProjectList"
+        ></tr>
+      </table>
+    </div>
   </mat-card-content>
 </mat-card>
