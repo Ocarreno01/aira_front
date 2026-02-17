@@ -1,31 +1,27 @@
 import { CurrencyPipe, TitleCasePipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '../../../../material.module';
 import {
   NewProjectDialogComponent,
   NewProjectDialogResult,
-  ProjectStatus,
 } from '../new-project-dialog/new-project-dialog.component';
-
-interface ProjectListItem {
-  id: number;
-  clientName: string;
-  sellerName: string;
-  businessType: string;
-  estimatedAmount: number;
-  status: ProjectStatus;
-}
+import { ProjectsService } from '../../services/projects.service';
 
 @Component({
   selector: 'app-project-list',
   imports: [MaterialModule, CurrencyPipe, TitleCasePipe],
   templateUrl: './project-list.component.html',
 })
-export class ProjectListComponent {
+export class ProjectListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
+  private readonly projectsService = inject(ProjectsService);
+
+  public isLoadingProjects = true;
+  public projectListError = '';
 
   public displayedColumnsProjectList: string[] = [
+    'projectName',
     'client',
     'seller',
     'businessType',
@@ -33,48 +29,27 @@ export class ProjectListComponent {
     'status',
     'options',
   ];
-  public dataSourceProjectList: ProjectListItem[] = [
-    {
-      id: 1,
-      clientName: 'Constructora Andina SAS',
-      sellerName: 'Carlos Ramírez',
-      businessType: 'Venta Corporativa',
-      estimatedAmount: 45000000,
-      status: 'oportunidad',
-    },
-    {
-      id: 2,
-      clientName: 'Transportes del Norte',
-      sellerName: 'Laura Gómez',
-      businessType: 'Flota Empresarial',
-      estimatedAmount: 78000000,
-      status: 'cotizacion_enviada',
-    },
-    {
-      id: 3,
-      clientName: 'Comercializadora El Sol',
-      sellerName: 'Miguel Torres',
-      businessType: 'Venta Mayorista',
-      estimatedAmount: 125000000,
-      status: 'en_negociacion',
-    },
-    {
-      id: 4,
-      clientName: 'Industrias Metálicas JR',
-      sellerName: 'Andrés López',
-      businessType: 'Contrato Marco',
-      estimatedAmount: 98000000,
-      status: 'vendido',
-    },
-    {
-      id: 5,
-      clientName: 'Logística Express Bogotá',
-      sellerName: 'Natalia Herrera',
-      businessType: 'Renovación de Flota',
-      estimatedAmount: 65000000,
-      status: 'facturado',
-    },
-  ];
+  public dataSourceProjectList: unknown[] = [];
+
+  public ngOnInit(): void {
+    void this.loadProjects();
+  }
+
+  public async loadProjects(): Promise<void> {
+    this.projectListError = '';
+    this.isLoadingProjects = true;
+
+    try {
+      this.dataSourceProjectList = await this.projectsService.getProjects();
+      console.log('this.dataSourceProjectList ', this.dataSourceProjectList);
+    } catch (error) {
+      console.error('Error loading projects', error);
+      this.projectListError = 'No fue posible cargar el listado de proyectos.';
+      this.dataSourceProjectList = [];
+    } finally {
+      this.isLoadingProjects = false;
+    }
+  }
 
   public openNewProjectDialog(): void {
     const dialogRef = this.dialog.open(NewProjectDialogComponent, {
@@ -86,29 +61,34 @@ export class ProjectListComponent {
     dialogRef
       .afterClosed()
       .subscribe((result: NewProjectDialogResult | undefined) => {
-        if (!result) {
+        if (!result?.created) {
           return;
         }
 
-        const newProject: ProjectListItem = {
-          id: this.getNextProjectId(),
-          ...result,
-        };
-
-        this.dataSourceProjectList = [
-          newProject,
-          ...this.dataSourceProjectList,
-        ];
+        void this.loadProjects();
       });
   }
 
-  private getNextProjectId(): number {
-    if (!this.dataSourceProjectList.length) {
-      return 1;
-    }
+  public getStatusClass(status: string): string {
+    const baseClass = 'rounded font-semibold p-6 py-1 text-xs';
+    const statusClassMap: Record<string, string> = {
+      oportunidad: `bg-light-warning text-warning ${baseClass}`,
+      cotizacion_enviada: `bg-light-error text-error ${baseClass}`,
+      en_negociacion: `bg-light-success text-success ${baseClass}`,
+      vendido: `bg-light-success text-success ${baseClass}`,
+      facturado: `bg-light-success text-success ${baseClass}`,
+    };
 
     return (
-      Math.max(...this.dataSourceProjectList.map((project) => project.id)) + 1
+      statusClassMap[status] ?? `bg-light-primary text-primary ${baseClass}`
     );
+  }
+
+  public formatStatusLabel(status: string): string {
+    if (!status) {
+      return 'Desconocido';
+    }
+
+    return status.replaceAll('_', ' ');
   }
 }

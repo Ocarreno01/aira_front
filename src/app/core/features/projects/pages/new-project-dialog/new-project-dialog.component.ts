@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -7,20 +7,13 @@ import {
 } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from 'src/app/core/material.module';
-
-export type ProjectStatus =
-  | 'oportunidad'
-  | 'cotizacion_enviada'
-  | 'en_negociacion'
-  | 'vendido'
-  | 'facturado';
+import {
+  ProjectCatalogOption,
+  ProjectsService,
+} from '../../services/projects.service';
 
 export interface NewProjectDialogResult {
-  clientName: string;
-  sellerName: string;
-  businessType: string;
-  estimatedAmount: number;
-  status: ProjectStatus;
+  created: boolean;
 }
 
 @Component({
@@ -28,38 +21,40 @@ export interface NewProjectDialogResult {
   imports: [MaterialModule, ReactiveFormsModule],
   templateUrl: './new-project-dialog.component.html',
 })
-export class NewProjectDialogComponent {
-  public readonly statusOptions: { value: ProjectStatus; label: string }[] = [
-    { value: 'oportunidad', label: 'Oportunidad' },
-    { value: 'cotizacion_enviada', label: 'Cotización enviada' },
-    { value: 'en_negociacion', label: 'En negociación' },
-    { value: 'vendido', label: 'Vendido' },
-    { value: 'facturado', label: 'Facturado' },
-  ];
+export class NewProjectDialogComponent implements OnInit {
+  public isLoadingCatalogs = true;
+  public isCreatingProject = false;
+  public catalogLoadError = '';
+  public createError = '';
+  public clients: ProjectCatalogOption[] = [];
+  public sellers: ProjectCatalogOption[] = [];
+  public statuses: ProjectCatalogOption[] = [];
+  public projectTypes: ProjectCatalogOption[] = [];
 
   public readonly newProjectForm = new FormGroup({
-    clientName: new FormControl('', {
+    projectName: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    sellerName: new FormControl('', {
-      nonNullable: true,
+    clientId: new FormControl<string | number | null>(null, {
       validators: [Validators.required],
     }),
-    businessType: new FormControl('', {
-      nonNullable: true,
+    sellerId: new FormControl<string | number | null>(null, {
       validators: [Validators.required],
     }),
-    estimatedAmount: new FormControl<number | null>(null, {
+    projectTypeId: new FormControl<string | number | null>(null, {
+      validators: [Validators.required],
+    }),
+    statusId: new FormControl<string | number | null>(null, {
+      validators: [Validators.required],
+    }),
+    estimatedValue: new FormControl<number | null>(null, {
       validators: [Validators.required, Validators.min(1)],
-    }),
-    status: new FormControl<ProjectStatus>('oportunidad', {
-      nonNullable: true,
-      validators: [Validators.required],
     }),
   });
 
   constructor(
+    private readonly projectsService: ProjectsService,
     private readonly dialogRef: MatDialogRef<
       NewProjectDialogComponent,
       NewProjectDialogResult
@@ -70,28 +65,84 @@ export class NewProjectDialogComponent {
     return this.newProjectForm.controls;
   }
 
+  public ngOnInit(): void {
+    void this.loadCatalogs();
+  }
+
   public close(): void {
     this.dialogRef.close();
   }
 
-  public createProject(): void {
+  public async createProject(): Promise<void> {
     if (this.newProjectForm.invalid) {
       this.newProjectForm.markAllAsTouched();
       return;
     }
 
     const value = this.newProjectForm.getRawValue();
+    const projectName = value.projectName.trim();
 
-    if (value.estimatedAmount === null) {
+    if (
+      !projectName ||
+      value.clientId === null ||
+      value.sellerId === null ||
+      value.projectTypeId === null ||
+      value.statusId === null ||
+      value.estimatedValue === null
+    ) {
       return;
     }
 
-    this.dialogRef.close({
-      clientName: value.clientName,
-      sellerName: value.sellerName,
-      businessType: value.businessType,
-      estimatedAmount: value.estimatedAmount,
-      status: value.status,
-    });
+    this.createError = '';
+    this.isCreatingProject = true;
+
+    try {
+      await this.projectsService.createProject({
+        clientId: value.clientId,
+        name: projectName,
+        sellerId: value.sellerId,
+        projectTypeId: value.projectTypeId,
+        projectStatusId: value.statusId,
+        estimatedValue: value.estimatedValue,
+      });
+
+      this.dialogRef.close({
+        created: true,
+      });
+    } catch (error) {
+      console.error('Error creating project', error);
+      this.createError = 'No fue posible crear el proyecto. Intenta de nuevo.';
+    } finally {
+      this.isCreatingProject = false;
+    }
+  }
+
+  public async retryCatalogLoad(): Promise<void> {
+    await this.loadCatalogs();
+  }
+
+  private async loadCatalogs(): Promise<void> {
+    this.catalogLoadError = '';
+    this.isLoadingCatalogs = true;
+
+    try {
+      const [clients, sellers, statuses, projectTypes] = await Promise.all([
+        this.projectsService.getClients(),
+        this.projectsService.getSellers(),
+        this.projectsService.getStatuses(),
+        this.projectsService.getProjectTypes(),
+      ]);
+
+      this.clients = clients;
+      this.sellers = sellers;
+      this.statuses = statuses;
+      this.projectTypes = projectTypes;
+    } catch (error) {
+      console.error('Error loading project catalogs', error);
+      this.catalogLoadError =
+        'No fue posible cargar los catálogos del proyecto.';
+    } finally {
+      this.isLoadingCatalogs = false;
+    }
   }
 }
