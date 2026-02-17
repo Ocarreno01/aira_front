@@ -7,12 +7,18 @@ export interface ProjectCatalogOption {
 }
 
 export interface ProjectListItem {
-  id: number;
+  id: string | number;
+  name: string;
+  clientId: string | number | null;
   clientName: string;
+  sellerId: string | number | null;
   sellerName: string;
-  businessType: string;
+  projectTypeId: string | number | null;
+  businessTypeName: string;
+  projectStatusId: string | number | null;
+  statusCode: string;
+  statusName: string;
   estimatedValue: number;
-  status: string;
 }
 
 export interface CreateProjectPayload {
@@ -23,6 +29,8 @@ export interface CreateProjectPayload {
   projectStatusId: string | number;
   estimatedValue: number;
 }
+
+export type UpdateProjectPayload = CreateProjectPayload;
 
 @Injectable({
   providedIn: 'root',
@@ -36,14 +44,27 @@ export class ProjectsService {
 
   constructor(private readonly apiService: ApiService) {}
 
-  public async getProjects(): Promise<unknown[]> {
+  public async getProjects(): Promise<ProjectListItem[]> {
     const response = await this.apiService.get<unknown>(this.projectsEndpoint);
     return this.normalizeProjectList(response);
   }
 
   public async createProject(payload: CreateProjectPayload): Promise<void> {
-    console.log('payload', payload);
     await this.apiService.post<unknown>(this.projectsEndpoint, payload);
+  }
+
+  public async updateProject(
+    projectId: string | number,
+    payload: UpdateProjectPayload,
+  ): Promise<void> {
+    await this.apiService.put<unknown>(
+      `${this.projectsEndpoint}/${projectId}`,
+      payload,
+    );
+  }
+
+  public async deleteProject(projectId: string | number): Promise<void> {
+    await this.apiService.delete<unknown>(`${this.projectsEndpoint}/${projectId}`);
   }
 
   public async getClients(): Promise<ProjectCatalogOption[]> {
@@ -89,8 +110,88 @@ export class ProjectsService {
       .filter((item): item is ProjectCatalogOption => item !== null);
   }
 
-  private normalizeProjectList(response: unknown): unknown[] {
-    return this.unwrapArray<Record<string, unknown>>(response);
+  private normalizeProjectList(response: unknown): ProjectListItem[] {
+    return this.unwrapArray<Record<string, unknown>>(response).map(
+      (project, index) => {
+        const id = this.toId(project['id']) ?? index + 1;
+        const name = this.toString(
+          project['name'] ??
+            project['projectName'] ??
+            project['title'] ??
+            this.readNested(project, 'project', 'name'),
+          'Sin nombre',
+        );
+        const clientId =
+          this.toId(project['clientId']) ?? this.toIdNested(project, 'client', 'id');
+        const clientName = this.toString(
+          project['clientName'] ??
+            this.readNested(project, 'client', 'name') ??
+            this.readNested(project, 'client', 'fullName'),
+          'Sin cliente',
+        );
+        const sellerId =
+          this.toId(project['sellerId']) ?? this.toIdNested(project, 'seller', 'id');
+        const sellerName = this.toString(
+          project['sellerName'] ??
+            this.readNested(project, 'seller', 'name') ??
+            this.readNested(project, 'seller', 'fullName'),
+          'Sin vendedor',
+        );
+        const projectTypeId =
+          this.toId(project['projectTypeId']) ??
+          this.toId(project['businessTypeId']) ??
+          this.toIdNested(project, 'projectType', 'id') ??
+          this.toIdNested(project, 'businessType', 'id');
+        const businessTypeName = this.toString(
+          project['businessTypeName'] ??
+            project['businessType'] ??
+            this.readNested(project, 'projectType', 'name') ??
+            this.readNested(project, 'businessType', 'name') ??
+            this.readNested(project, 'type', 'name'),
+          'Sin tipo',
+        );
+        const projectStatusId =
+          this.toId(project['projectStatusId']) ??
+          this.toId(project['statusId']) ??
+          this.toIdNested(project, 'projectStatus', 'id') ??
+          this.toIdNested(project, 'status', 'id');
+        const rawStatusName = this.toString(
+          project['statusName'] ??
+            project['status'] ??
+            this.readNested(project, 'projectStatus', 'name') ??
+            this.readNested(project, 'status', 'name') ??
+            this.readNested(project, 'projectStatus', 'code') ??
+            this.readNested(project, 'status', 'code'),
+          'desconocido',
+        );
+        const statusCode = this.toString(
+          project['statusCode'] ??
+            this.readNested(project, 'projectStatus', 'code') ??
+            this.readNested(project, 'status', 'code'),
+          this.toStatusCode(rawStatusName),
+        );
+
+        return {
+          id,
+          name,
+          clientId,
+          clientName,
+          sellerId,
+          sellerName,
+          projectTypeId,
+          businessTypeName,
+          projectStatusId,
+          statusCode,
+          statusName: rawStatusName,
+          estimatedValue:
+            this.toNumber(
+              project['estimatedValue'] ??
+                project['estimatedAmount'] ??
+                project['amount'],
+            ) ?? 0,
+        };
+      },
+    );
   }
 
   private unwrapArray<T>(response: unknown): T[] {
@@ -127,6 +228,22 @@ export class ProjectsService {
     return (firstValue as Record<string, unknown>)[secondKey];
   }
 
+  private toIdNested(
+    source: Record<string, unknown>,
+    firstKey: string,
+    secondKey: string,
+  ): string | number | null {
+    return this.toId(this.readNested(source, firstKey, secondKey));
+  }
+
+  private toId(value: unknown): string | number | null {
+    if (typeof value === 'string' || typeof value === 'number') {
+      return value;
+    }
+
+    return null;
+  }
+
   private toNumber(value: unknown): number | null {
     if (typeof value === 'number' && Number.isFinite(value)) {
       return value;
@@ -148,6 +265,14 @@ export class ProjectsService {
     }
 
     return fallback;
+  }
+
+  private toStatusCode(status: string): string {
+    return status
+      .trim()
+      .toLowerCase()
+      .replaceAll('-', '_')
+      .replaceAll(' ', '_');
   }
 
   private isPrimitive(value: unknown): value is string | number {

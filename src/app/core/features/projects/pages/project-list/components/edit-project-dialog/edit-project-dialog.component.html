@@ -1,0 +1,119 @@
+<h2 mat-dialog-title>Editar proyecto</h2>
+
+<form [formGroup]="editProjectForm" (ngSubmit)="updateProject()" novalidate>
+  <mat-dialog-content class="!pb-2 min-h-[220px]">
+    @if (isLoadingCatalogs) {
+      <div class="h-[200px] flex items-center justify-center">
+        <mat-progress-spinner
+          mode="indeterminate"
+          diameter="40"
+        ></mat-progress-spinner>
+      </div>
+    } @else if (catalogLoadError) {
+      <div class="h-[200px] flex flex-col items-center justify-center gap-3">
+        <span class="text-sm text-error">{{ catalogLoadError }}</span>
+        <button mat-stroked-button type="button" (click)="retryCatalogLoad()">
+          Reintentar
+        </button>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <mat-form-field appearance="outline" class="w-full md:col-span-2">
+          <mat-label>Nombre del proyecto</mat-label>
+          <input matInput type="text" formControlName="projectName" />
+          @if (f.projectName.touched && f.projectName.invalid) {
+            <mat-error>El nombre del proyecto es obligatorio</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full md:col-span-2">
+          <mat-label>Cliente</mat-label>
+          <mat-select formControlName="clientId">
+            @for (client of clients; track client.id) {
+              <mat-option [value]="client.id">
+                {{ client.name }}
+              </mat-option>
+            }
+          </mat-select>
+          @if (f.clientId.touched && f.clientId.invalid) {
+            <mat-error>El cliente es obligatorio</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Vendedor</mat-label>
+          <mat-select formControlName="sellerId">
+            @for (seller of sellers; track seller.id) {
+              <mat-option [value]="seller.id">
+                {{ seller.name }}
+              </mat-option>
+            }
+          </mat-select>
+          @if (f.sellerId.touched && f.sellerId.invalid) {
+            <mat-error>El vendedor es obligatorio</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Tipo de proyecto</mat-label>
+          <mat-select formControlName="projectTypeId">
+            @for (projectType of projectTypes; track projectType.id) {
+              <mat-option [value]="projectType.id">
+                {{ projectType.name }}
+              </mat-option>
+            }
+          </mat-select>
+          @if (f.projectTypeId.touched && f.projectTypeId.invalid) {
+            <mat-error>El tipo de proyecto es obligatorio</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Valor estimado</mat-label>
+          <input matInput type="number" formControlName="estimatedValue" min="1" />
+          @if (f.estimatedValue.touched && f.estimatedValue.invalid) {
+            <mat-error>Ingresa un valor mayor a 0</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="statusId">
+            @for (status of statuses; track status.id) {
+              <mat-option [value]="status.id">{{ status.name }}</mat-option>
+            }
+          </mat-select>
+          @if (f.statusId.touched && f.statusId.invalid) {
+            <mat-error>El estado es obligatorio</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="px-6 pb-6">
+    @if (updateError) {
+      <span class="text-sm text-error mr-auto">{{ updateError }}</span>
+    }
+    <button
+      mat-button
+      type="button"
+      (click)="close()"
+      [disabled]="isUpdatingProject"
+    >
+      Cancelar
+    </button>
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      [disabled]="isLoadingCatalogs || !!catalogLoadError || isUpdatingProject"
+    >
+      @if (isUpdatingProject) {
+        Guardando...
+      } @else {
+        Guardar cambios
+      }
+    </button>
+  </mat-dialog-actions>
+</form>

@@ -2,11 +2,19 @@ import { CurrencyPipe, TitleCasePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '../../../../material.module';
+import { ConfirmProjectDeleteDialogComponent } from './components/confirm-project-delete-dialog/confirm-project-delete-dialog.component';
+import {
+  EditProjectDialogComponent,
+  EditProjectDialogResult,
+} from './components/edit-project-dialog/edit-project-dialog.component';
 import {
   NewProjectDialogComponent,
   NewProjectDialogResult,
 } from '../new-project-dialog/new-project-dialog.component';
-import { ProjectsService } from '../../services/projects.service';
+import {
+  ProjectListItem,
+  ProjectsService,
+} from '../../services/projects.service';
 
 @Component({
   selector: 'app-project-list',
@@ -19,6 +27,7 @@ export class ProjectListComponent implements OnInit {
 
   public isLoadingProjects = true;
   public projectListError = '';
+  public deletingProjectId: string | number | null = null;
 
   public displayedColumnsProjectList: string[] = [
     'projectName',
@@ -29,7 +38,7 @@ export class ProjectListComponent implements OnInit {
     'status',
     'options',
   ];
-  public dataSourceProjectList: unknown[] = [];
+  public dataSourceProjectList: ProjectListItem[] = [];
 
   public ngOnInit(): void {
     void this.loadProjects();
@@ -41,7 +50,6 @@ export class ProjectListComponent implements OnInit {
 
     try {
       this.dataSourceProjectList = await this.projectsService.getProjects();
-      console.log('this.dataSourceProjectList ', this.dataSourceProjectList);
     } catch (error) {
       console.error('Error loading projects', error);
       this.projectListError = 'No fue posible cargar el listado de proyectos.';
@@ -69,8 +77,53 @@ export class ProjectListComponent implements OnInit {
       });
   }
 
+  public openEditProjectDialog(project: ProjectListItem): void {
+    const dialogRef = this.dialog.open(EditProjectDialogComponent, {
+      width: '720px',
+      maxWidth: '95vw',
+      autoFocus: false,
+      data: {
+        project,
+      },
+    });
+
+    dialogRef
+      .afterClosed()
+      .subscribe((result: EditProjectDialogResult | undefined) => {
+        if (!result?.updated) {
+          return;
+        }
+
+        void this.loadProjects();
+      });
+  }
+
+  public openDeleteProjectDialog(project: ProjectListItem): void {
+    const dialogRef = this.dialog.open(ConfirmProjectDeleteDialogComponent, {
+      width: '420px',
+      maxWidth: '95vw',
+      autoFocus: false,
+      data: {
+        projectName: project.name,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed: boolean | undefined) => {
+      if (!confirmed) {
+        return;
+      }
+
+      void this.deleteProject(project);
+    });
+  }
+
+  public canViewNegotiation(project: ProjectListItem): boolean {
+    return this.normalizeStatus(project.statusCode) === 'en_negociacion';
+  }
+
   public getStatusClass(status: string): string {
     const baseClass = 'rounded font-semibold p-6 py-1 text-xs';
+    const normalizedStatus = this.normalizeStatus(status);
     const statusClassMap: Record<string, string> = {
       oportunidad: `bg-light-warning text-warning ${baseClass}`,
       cotizacion_enviada: `bg-light-error text-error ${baseClass}`,
@@ -80,7 +133,8 @@ export class ProjectListComponent implements OnInit {
     };
 
     return (
-      statusClassMap[status] ?? `bg-light-primary text-primary ${baseClass}`
+      statusClassMap[normalizedStatus] ??
+      `bg-light-primary text-primary ${baseClass}`
     );
   }
 
@@ -90,5 +144,28 @@ export class ProjectListComponent implements OnInit {
     }
 
     return status.replaceAll('_', ' ');
+  }
+
+  private async deleteProject(project: ProjectListItem): Promise<void> {
+    this.deletingProjectId = project.id;
+    this.projectListError = '';
+
+    try {
+      await this.projectsService.deleteProject(project.id);
+      await this.loadProjects();
+    } catch (error) {
+      console.error('Error deleting project', error);
+      this.projectListError = 'No fue posible eliminar el proyecto.';
+    } finally {
+      this.deletingProjectId = null;
+    }
+  }
+
+  private normalizeStatus(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .replaceAll('-', '_')
+      .replaceAll(' ', '_');
   }
 }

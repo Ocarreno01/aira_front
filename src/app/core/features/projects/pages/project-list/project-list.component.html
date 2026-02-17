@@ -148,8 +148,8 @@
               mat-cell
               *matCellDef="let element"
             >
-              <span [class]="getStatusClass(element.statusName)">
-                {{ formatStatusLabel(element.statusName) | titlecase }}
+              <span [class]="getStatusClass(element.statusCode || element.statusName)">
+                {{ formatStatusLabel(element.statusName || element.statusCode) | titlecase }}
               </span>
             </td>
           </ng-container>
@@ -173,17 +173,29 @@
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #menu="matMenu">
-                <button mat-menu-item>
+                <button mat-menu-item (click)="openEditProjectDialog(element)">
                   <mat-icon>edit</mat-icon>
                   <span>Editar</span>
                 </button>
-                <button mat-menu-item>
-                  <mat-icon>bolt</mat-icon>
-                  <span>Ver negociación</span>
-                </button>
-                <button mat-menu-item>
+                @if (canViewNegotiation(element)) {
+                  <button mat-menu-item>
+                    <mat-icon>bolt</mat-icon>
+                    <span>Ver negociación</span>
+                  </button>
+                }
+                <button
+                  mat-menu-item
+                  [disabled]="deletingProjectId === element.id"
+                  (click)="openDeleteProjectDialog(element)"
+                >
                   <mat-icon>delete</mat-icon>
-                  <span>Borrar</span>
+                  <span>
+                    @if (deletingProjectId === element.id) {
+                      Eliminando...
+                    } @else {
+                      Eliminar
+                    }
+                  </span>
                 </button>
               </mat-menu>
             </td>

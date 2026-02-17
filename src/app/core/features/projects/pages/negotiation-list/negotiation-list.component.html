@@ -1,0 +1,108 @@
+<mat-card class="cardWithShadow theme-card">
+  <div class="p-6 flex items-center justify-between">
+    <mat-card-title class="mb-0">Listado de negociaciones</mat-card-title>
+  </div>
+
+  <mat-card-content class="border-t border-border">
+    @if (isLoadingNegotiations) {
+      <div class="h-[240px] flex items-center justify-center">
+        <mat-progress-spinner
+          mode="indeterminate"
+          diameter="42"
+        ></mat-progress-spinner>
+      </div>
+    } @else if (negotiationListError) {
+      <div class="h-[240px] flex flex-col items-center justify-center gap-3">
+        <span class="text-sm text-error">{{ negotiationListError }}</span>
+        <button mat-stroked-button type="button" (click)="loadNegotiations()">
+          Reintentar
+        </button>
+      </div>
+    } @else if (!dataSourceNegotiationList.length) {
+      <div class="h-[240px] flex items-center justify-center">
+        <span class="text-sm opacity-70">No hay negociaciones para mostrar.</span>
+      </div>
+    } @else {
+      <div class="relative overflow-auto">
+        <table
+          mat-table
+          [dataSource]="dataSourceNegotiationList"
+          class="min-w-full"
+        >
+          <ng-container matColumnDef="project">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              class="font-semibold text-sm pl-0!"
+            >
+              Proyecto
+            </th>
+            <td class="whitespace-nowrap pl-0!" mat-cell *matCellDef="let element">
+              <h6 class="text-sm font-semibold">{{ element.projectName }}</h6>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="client">
+            <th mat-header-cell *matHeaderCellDef class="font-semibold text-sm">
+              Cliente
+            </th>
+            <td class="whitespace-nowrap" mat-cell *matCellDef="let element">
+              <h6 class="text-sm font-semibold">{{ element.clientName }}</h6>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="createdAt">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              class="font-semibold text-sm text-center!"
+            >
+              Fecha de creación
+            </th>
+            <td class="whitespace-nowrap text-center!" mat-cell *matCellDef="let element">
+              <h6 class="text-sm font-semibold">
+                @if (element.createdAt) {
+                  {{ element.createdAt | date: "dd/MM/yyyy HH:mm" }}
+                } @else {
+                  Sin fecha
+                }
+              </h6>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="options">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              class="font-semibold text-sm"
+            ></th>
+            <td class="whitespace-nowrap text-end!" mat-cell *matCellDef="let element">
+              <button
+                mat-icon-button
+                [matMenuTriggerFor]="menu"
+                aria-label="Opciones de negociación"
+              >
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item>
+                  <mat-icon>description</mat-icon>
+                  <span>Ver bitácora</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr
+            mat-header-row
+            *matHeaderRowDef="displayedColumnsNegotiationList"
+          ></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumnsNegotiationList"
+          ></tr>
+        </table>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>
