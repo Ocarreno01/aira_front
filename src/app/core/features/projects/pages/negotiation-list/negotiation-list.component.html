@@ -20,7 +20,9 @@
       </div>
     } @else if (!dataSourceNegotiationList.length) {
       <div class="h-[240px] flex items-center justify-center">
-        <span class="text-sm opacity-70">No hay negociaciones para mostrar.</span>
+        <span class="text-sm opacity-70"
+          >No hay negociaciones para mostrar.</span
+        >
       </div>
     } @else {
       <div class="relative overflow-auto">
@@ -37,7 +39,11 @@
             >
               Proyecto
             </th>
-            <td class="whitespace-nowrap pl-0!" mat-cell *matCellDef="let element">
+            <td
+              class="whitespace-nowrap pl-0!"
+              mat-cell
+              *matCellDef="let element"
+            >
               <h6 class="text-sm font-semibold">{{ element.projectName }}</h6>
             </td>
           </ng-container>
@@ -59,7 +65,11 @@
             >
               Fecha de creación
             </th>
-            <td class="whitespace-nowrap text-center!" mat-cell *matCellDef="let element">
+            <td
+              class="whitespace-nowrap text-center!"
+              mat-cell
+              *matCellDef="let element"
+            >
               <h6 class="text-sm font-semibold">
                 @if (element.createdAt) {
                   {{ element.createdAt | date: "dd/MM/yyyy HH:mm" }}
@@ -76,7 +86,11 @@
               *matHeaderCellDef
               class="font-semibold text-sm"
             ></th>
-            <td class="whitespace-nowrap text-end!" mat-cell *matCellDef="let element">
+            <td
+              class="whitespace-nowrap text-end!"
+              mat-cell
+              *matCellDef="let element"
+            >
               <button
                 mat-icon-button
                 [matMenuTriggerFor]="menu"
@@ -86,8 +100,8 @@
               </button>
               <mat-menu #menu="matMenu">
                 <button mat-menu-item>
-                  <mat-icon>description</mat-icon>
-                  <span>Ver bitácora</span>
+                  <mat-icon>visibility</mat-icon>
+                  <span>Ver negociación</span>
                 </button>
               </mat-menu>
             </td>
