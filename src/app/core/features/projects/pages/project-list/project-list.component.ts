@@ -28,6 +28,7 @@ export class ProjectListComponent implements OnInit {
   public isLoadingProjects = true;
   public projectListError = '';
   public deletingProjectId: string | number | null = null;
+  public searchProjectTerm = '';
 
   public displayedColumnsProjectList: string[] = [
     'projectName',
@@ -39,6 +40,7 @@ export class ProjectListComponent implements OnInit {
     'options',
   ];
   public dataSourceProjectList: ProjectListItem[] = [];
+  public filteredDataSourceProjectList: ProjectListItem[] = [];
 
   public ngOnInit(): void {
     void this.loadProjects();
@@ -50,10 +52,12 @@ export class ProjectListComponent implements OnInit {
 
     try {
       this.dataSourceProjectList = await this.projectsService.getProjects();
+      this.applySearchFilter(this.searchProjectTerm);
     } catch (error) {
       console.error('Error loading projects', error);
       this.projectListError = 'No fue posible cargar el listado de proyectos.';
       this.dataSourceProjectList = [];
+      this.filteredDataSourceProjectList = [];
     } finally {
       this.isLoadingProjects = false;
     }
@@ -121,6 +125,25 @@ export class ProjectListComponent implements OnInit {
     return this.normalizeStatus(project.statusCode) === 'en_negociacion';
   }
 
+  public applySearchFilter(value: string): void {
+    this.searchProjectTerm = value;
+    const normalizedTerm = this.normalizeSearchText(value);
+
+    if (!normalizedTerm) {
+      this.filteredDataSourceProjectList = [...this.dataSourceProjectList];
+      return;
+    }
+
+    this.filteredDataSourceProjectList = this.dataSourceProjectList.filter(
+      (project) =>
+        this.buildProjectSearchIndex(project).includes(normalizedTerm),
+    );
+  }
+
+  public clearSearch(): void {
+    this.applySearchFilter('');
+  }
+
   public getStatusClass(status: string): string {
     const baseClass = 'rounded font-semibold p-6 py-1 text-xs';
     const normalizedStatus = this.normalizeStatus(status);
@@ -169,5 +192,28 @@ export class ProjectListComponent implements OnInit {
       .replace(/[\u0300-\u036f]/g, '')
       .replaceAll('-', '_')
       .replaceAll(' ', '_');
+  }
+
+  private buildProjectSearchIndex(project: ProjectListItem): string {
+    return this.normalizeSearchText(
+      [
+        project.id,
+        project.name,
+        project.clientName,
+        project.sellerName,
+        project.businessTypeName,
+        project.estimatedValue,
+        project.statusName,
+        project.statusCode,
+      ].join(' '),
+    );
+  }
+
+  private normalizeSearchText(value: unknown): string {
+    return String(value ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 }

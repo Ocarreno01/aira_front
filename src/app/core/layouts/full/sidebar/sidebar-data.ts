@@ -18,7 +18,10 @@ export const navItems: NavItem[] = [
     route: '/projects/project-list',
   },
   {
-    displayName: 'Negociaciones',
+    navCap: 'Negociaciones',
+  },
+  {
+    displayName: 'Listado de negociaciones',
     iconName: 'solar:clipboard-list-line-duotone',
     route: '/projects/negotiation-list',
   },

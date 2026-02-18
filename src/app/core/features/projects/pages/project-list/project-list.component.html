@@ -13,6 +13,30 @@
   </div>
 
   <mat-card-content class="border-t border-border">
+    <div class="px-6 pt-6 pb-2">
+      <mat-form-field appearance="outline" class="w-full md:w-[420px]">
+        <mat-label>Buscar proyecto</mat-label>
+        <input
+          matInput
+          #searchInput
+          [value]="searchProjectTerm"
+          (input)="applySearchFilter(searchInput.value)"
+          placeholder="Nombre, cliente, vendedor, tipo, valor, estado..."
+        />
+        @if (searchProjectTerm) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpiar búsqueda"
+            (click)="clearSearch()"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+    </div>
+
     @if (isLoadingProjects) {
       <div class="h-[240px] flex items-center justify-center">
         <mat-progress-spinner
@@ -27,15 +51,21 @@
           Reintentar
         </button>
       </div>
-    } @else if (!dataSourceProjectList.length) {
+    } @else if (!filteredDataSourceProjectList.length) {
       <div class="h-[240px] flex items-center justify-center">
-        <span class="text-sm opacity-70">No hay proyectos para mostrar.</span>
+        @if (searchProjectTerm) {
+          <span class="text-sm opacity-70">
+            No se encontraron coincidencias para "{{ searchProjectTerm }}".
+          </span>
+        } @else {
+          <span class="text-sm opacity-70">No hay proyectos para mostrar.</span>
+        }
       </div>
     } @else {
       <div class="relative overflow-auto">
         <table
           mat-table
-          [dataSource]="dataSourceProjectList"
+          [dataSource]="filteredDataSourceProjectList"
           class="min-w-full"
         >
           <ng-container matColumnDef="projectName">
