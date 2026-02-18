@@ -18,6 +18,8 @@ import {
   templateUrl: './negotiation-detail.component.html',
 })
 export class NegotiationDetailComponent implements OnInit {
+  private readonly dangerThresholdInDays = 3;
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
@@ -95,5 +97,27 @@ export class NegotiationDetailComponent implements OnInit {
 
         void this.loadNegotiationDetail();
       });
+  }
+
+  public shouldShowDangerAlert(): boolean {
+    const logs = this.negotiationDetail?.logs ?? [];
+    if (!logs.length) {
+      return false;
+    }
+
+    const logDates = logs
+      .map((log) => (log.date ? new Date(log.date).getTime() : Number.NaN))
+      .filter((date) => Number.isFinite(date));
+
+    if (!logDates.length) {
+      return false;
+    }
+
+    const latestLogDate = Math.max(...logDates);
+    const elapsedMilliseconds = Date.now() - latestLogDate;
+    const thresholdMilliseconds =
+      this.dangerThresholdInDays * 24 * 60 * 60 * 1000;
+
+    return elapsedMilliseconds >= thresholdMilliseconds;
   }
 }

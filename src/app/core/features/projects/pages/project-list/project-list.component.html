@@ -13,6 +13,35 @@
   </div>
 
   <mat-card-content class="border-t border-border">
+    @if (!isLoadingProjects && dataSourceProjectList.length) {
+      <div class="px-6 pt-5 pb-3">
+        <div class="w-full rounded border border-border p-3">
+          <mat-form-field appearance="outline" class="w-full mb-0!">
+            <mat-label>Buscar en proyectos</mat-label>
+            <mat-icon matPrefix class="mr-2 opacity-70">search</mat-icon>
+            <input
+              matInput
+              #searchInput
+              [value]="searchProjectTerm"
+              (input)="applySearchFilter(searchInput.value)"
+              placeholder="Nombre, cliente, vendedor, tipo, valor, estado..."
+            />
+            @if (searchProjectTerm) {
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                aria-label="Limpiar búsqueda"
+                (click)="clearSearch()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+        </div>
+      </div>
+    }
+
     @if (isLoadingProjects) {
       <div class="h-[240px] flex items-center justify-center">
         <mat-progress-spinner

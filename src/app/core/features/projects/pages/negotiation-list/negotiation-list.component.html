@@ -5,28 +5,31 @@
 
   <mat-card-content class="border-t border-border">
     @if (!isLoadingNegotiations && dataSourceNegotiationList.length) {
-      <div class="px-6 pt-6 pb-2">
-        <mat-form-field appearance="outline" class="w-full md:w-[420px]">
-          <mat-label>Buscar negociación</mat-label>
-          <input
-            matInput
-            #searchInput
-            [value]="searchNegotiationTerm"
-            (input)="applySearchFilter(searchInput.value)"
-            placeholder="Proyecto, cliente, fecha, id..."
-          />
-          @if (searchNegotiationTerm) {
-            <button
-              mat-icon-button
-              matSuffix
-              type="button"
-              aria-label="Limpiar búsqueda"
-              (click)="clearSearch()"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-          }
-        </mat-form-field>
+      <div class="px-6 pt-5 pb-3">
+        <div class="w-full rounded border border-border p-3">
+          <mat-form-field appearance="outline" class="w-full mb-0!">
+            <mat-label>Buscar negociación</mat-label>
+            <mat-icon matPrefix class="mr-2 opacity-70">search</mat-icon>
+            <input
+              matInput
+              #searchInput
+              [value]="searchNegotiationTerm"
+              (input)="applySearchFilter(searchInput.value)"
+              placeholder="Proyecto, cliente, fecha, id..."
+            />
+            @if (searchNegotiationTerm) {
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                aria-label="Limpiar búsqueda"
+                (click)="clearSearch()"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+        </div>
       </div>
     }
 

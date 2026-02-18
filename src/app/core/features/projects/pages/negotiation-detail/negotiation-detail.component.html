@@ -31,6 +31,17 @@
         </button>
       </div>
     } @else if (negotiationDetail) {
+      @if (shouldShowDangerAlert()) {
+        <div
+          class="w-full rounded border border-error bg-light-error text-error p-4 mb-4"
+        >
+          <p class="text-sm font-semibold">Negociación en peligro</p>
+          <p class="text-xs mt-1">
+            La última actualización de bitácora fue hace 3 días o más.
+          </p>
+        </div>
+      }
+
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="rounded border border-border p-4">
           <p class="text-xs uppercase opacity-70">Proyecto</p>
