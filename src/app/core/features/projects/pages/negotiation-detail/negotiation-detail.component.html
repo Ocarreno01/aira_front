@@ -1,0 +1,118 @@
+<mat-card class="cardWithShadow theme-card">
+  <div class="p-6 flex items-center justify-between">
+    <mat-card-title class="mb-0">Detalle de negociación</mat-card-title>
+    <div class="flex items-center gap-2">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        [disabled]="isLoadingNegotiation || !!negotiationDetailError"
+        (click)="openCreateLogDialog()"
+      >
+        Nuevo registro bitácora
+      </button>
+      <button mat-stroked-button type="button" (click)="goBack()">Volver</button>
+    </div>
+  </div>
+
+  <mat-card-content class="border-t border-border p-6!">
+    @if (isLoadingNegotiation) {
+      <div class="h-[300px] flex items-center justify-center">
+        <mat-progress-spinner
+          mode="indeterminate"
+          diameter="42"
+        ></mat-progress-spinner>
+      </div>
+    } @else if (negotiationDetailError) {
+      <div class="h-[300px] flex flex-col items-center justify-center gap-3">
+        <span class="text-sm text-error">{{ negotiationDetailError }}</span>
+        <button mat-stroked-button type="button" (click)="loadNegotiationDetail()">
+          Reintentar
+        </button>
+      </div>
+    } @else if (negotiationDetail) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="rounded border border-border p-4">
+          <p class="text-xs uppercase opacity-70">Proyecto</p>
+          <p class="text-sm font-semibold mt-1">{{ negotiationDetail.projectName }}</p>
+        </div>
+        <div class="rounded border border-border p-4">
+          <p class="text-xs uppercase opacity-70">Cliente</p>
+          <p class="text-sm font-semibold mt-1">{{ negotiationDetail.clientName }}</p>
+        </div>
+        <div class="rounded border border-border p-4">
+          <p class="text-xs uppercase opacity-70">Vendedor</p>
+          <p class="text-sm font-semibold mt-1">{{ negotiationDetail.sellerName }}</p>
+        </div>
+        <div class="rounded border border-border p-4">
+          <p class="text-xs uppercase opacity-70">Tipo de proyecto</p>
+          <p class="text-sm font-semibold mt-1">
+            {{ negotiationDetail.projectTypeName }}
+          </p>
+        </div>
+        <div class="rounded border border-border p-4">
+          <p class="text-xs uppercase opacity-70">Estado</p>
+          <p class="text-sm font-semibold mt-1">{{ negotiationDetail.statusName }}</p>
+        </div>
+        <div class="rounded border border-border p-4">
+          <p class="text-xs uppercase opacity-70">Valor estimado</p>
+          <p class="text-sm font-semibold mt-1">
+            @if (negotiationDetail.estimatedValue !== null) {
+              {{ negotiationDetail.estimatedValue | currency: "COP" }}
+            } @else {
+              Sin valor
+            }
+          </p>
+        </div>
+        <div class="rounded border border-border p-4 md:col-span-2 lg:col-span-3">
+          <p class="text-xs uppercase opacity-70">Creada en</p>
+          <p class="text-sm font-semibold mt-1">
+            @if (negotiationDetail.createdAt) {
+              {{ negotiationDetail.createdAt | date: "dd/MM/yyyy HH:mm" }}
+            } @else {
+              Sin fecha
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <h3 class="text-base font-semibold mb-4">Bitácora de negociación</h3>
+
+        @if (!negotiationDetail.logs.length) {
+          <div class="rounded border border-border p-6 text-sm opacity-70">
+            No hay registros de bitácora para esta negociación.
+          </div>
+        } @else {
+          <div class="relative pl-6">
+            <div class="absolute left-2 top-0 bottom-0 w-px bg-border"></div>
+
+            @for (log of negotiationDetail.logs; track log.id || $index) {
+              <div class="relative mb-5 last:mb-0">
+                <span
+                  class="absolute -left-[1.15rem] top-2 h-3 w-3 rounded-full bg-primary"
+                ></span>
+
+                <div class="rounded border border-border p-4">
+                  <div
+                    class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2"
+                  >
+                    <p class="text-sm font-semibold">{{ log.sellerName }}</p>
+                    <p class="text-xs opacity-70">
+                      @if (log.date) {
+                        {{ log.date | date: "dd/MM/yyyy HH:mm" }}
+                      } @else {
+                        Sin fecha
+                      }
+                    </p>
+                  </div>
+                  <p class="text-sm">{{ log.description }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

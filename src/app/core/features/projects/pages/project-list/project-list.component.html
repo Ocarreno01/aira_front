@@ -13,30 +13,6 @@
   </div>
 
   <mat-card-content class="border-t border-border">
-    <div class="px-6 pt-6 pb-2">
-      <mat-form-field appearance="outline" class="w-full md:w-[420px]">
-        <mat-label>Buscar proyecto</mat-label>
-        <input
-          matInput
-          #searchInput
-          [value]="searchProjectTerm"
-          (input)="applySearchFilter(searchInput.value)"
-          placeholder="Nombre, cliente, vendedor, tipo, valor, estado..."
-        />
-        @if (searchProjectTerm) {
-          <button
-            mat-icon-button
-            matSuffix
-            type="button"
-            aria-label="Limpiar búsqueda"
-            (click)="clearSearch()"
-          >
-            <mat-icon>close</mat-icon>
-          </button>
-        }
-      </mat-form-field>
-    </div>
-
     @if (isLoadingProjects) {
       <div class="h-[240px] flex items-center justify-center">
         <mat-progress-spinner
@@ -62,30 +38,28 @@
         }
       </div>
     } @else {
-      <div class="relative overflow-auto">
+      <div class="relative overflow-x-hidden">
         <table
           mat-table
           [dataSource]="filteredDataSourceProjectList"
-          class="min-w-full"
+          class="w-full table-fixed"
         >
           <ng-container matColumnDef="projectName">
             <th
               mat-header-cell
               *matHeaderCellDef
-              class="font-semibold text-sm pl-0!"
+              class="font-semibold text-sm pl-0! w-[260px]"
             >
               Nombre del proyecto
             </th>
             <td
-              class="whitespace-nowrap pl-0!"
+              class="whitespace-normal break-words pl-0! align-top"
               mat-cell
               *matCellDef="let element"
             >
-              <div class="flex items-center gap-4">
-                <h6 class="text-sm font-semibold">
-                  {{ element.name }}
-                </h6>
-              </div>
+              <h6 class="text-sm font-semibold leading-5 whitespace-normal break-words">
+                {{ element.name }}
+              </h6>
             </td>
           </ng-container>
 
