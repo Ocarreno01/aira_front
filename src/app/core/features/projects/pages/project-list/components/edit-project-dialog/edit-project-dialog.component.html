@@ -87,6 +87,26 @@
             <mat-error>El estado es obligatorio</mat-error>
           }
         </mat-form-field>
+
+        @if (shouldShowNegotiationForm()) {
+          <mat-form-field appearance="outline" class="w-full md:col-span-2">
+            <mat-label>Descripción inicial de negociación</mat-label>
+            <textarea
+              matInput
+              rows="3"
+              formControlName="negotiationDescription"
+              placeholder="Detalle inicial para la bitácora"
+            ></textarea>
+            @if (
+              f.negotiationDescription.touched &&
+              f.negotiationDescription.invalid
+            ) {
+              <mat-error>
+                Ingresa una descripción de al menos 5 caracteres
+              </mat-error>
+            }
+          </mat-form-field>
+        }
       </div>
     }
   </mat-dialog-content>

@@ -8,6 +8,13 @@ export interface NegotiationListItem {
   createdAt: string | null;
 }
 
+export interface CreateNegotiationPayload {
+  projectId: string | number;
+  clientId: string | number;
+  sellerId: string | number;
+  description: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -17,8 +24,16 @@ export class NegotiationsService {
   constructor(private readonly apiService: ApiService) {}
 
   public async getNegotiations(): Promise<NegotiationListItem[]> {
-    const response = await this.apiService.get<unknown>(this.negotiationsEndpoint);
+    const response = await this.apiService.get<unknown>(
+      this.negotiationsEndpoint,
+    );
     return this.normalizeNegotiationList(response);
+  }
+
+  public async createNegotiation(
+    payload: CreateNegotiationPayload,
+  ): Promise<void> {
+    await this.apiService.post<unknown>(this.negotiationsEndpoint, payload);
   }
 
   private normalizeNegotiationList(response: unknown): NegotiationListItem[] {

@@ -165,6 +165,8 @@ export class ProjectListComponent implements OnInit {
     return value
       .trim()
       .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replaceAll('-', '_')
       .replaceAll(' ', '_');
   }

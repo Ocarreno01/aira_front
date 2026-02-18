@@ -4,6 +4,7 @@ import { ApiService } from 'src/app/core/http/api.service';
 export interface ProjectCatalogOption {
   id: string | number;
   name: string;
+  code?: string;
 }
 
 export interface ProjectListItem {
@@ -40,6 +41,7 @@ export class ProjectsService {
   private readonly clientsEndpoint = '/projects/clients';
   private readonly sellersEndpoint = '/projects/sellers';
   private readonly statusesEndpoint = '/projects/statuses';
+  private readonly statusWithBitacoraEndpoint = '/projects/statusWithBitacora';
   private readonly typesEndpoint = '/projects/types';
 
   constructor(private readonly apiService: ApiService) {}
@@ -49,8 +51,14 @@ export class ProjectsService {
     return this.normalizeProjectList(response);
   }
 
-  public async createProject(payload: CreateProjectPayload): Promise<void> {
-    await this.apiService.post<unknown>(this.projectsEndpoint, payload);
+  public async createProject(
+    payload: CreateProjectPayload,
+  ): Promise<string | number | null> {
+    const response = await this.apiService.post<unknown>(
+      this.projectsEndpoint,
+      payload,
+    );
+    return this.extractCreatedProjectId(response);
   }
 
   public async updateProject(
@@ -64,7 +72,9 @@ export class ProjectsService {
   }
 
   public async deleteProject(projectId: string | number): Promise<void> {
-    await this.apiService.delete<unknown>(`${this.projectsEndpoint}/${projectId}`);
+    await this.apiService.delete<unknown>(
+      `${this.projectsEndpoint}/${projectId}`,
+    );
   }
 
   public async getClients(): Promise<ProjectCatalogOption[]> {
@@ -87,12 +97,20 @@ export class ProjectsService {
     return this.normalizeCatalog(response);
   }
 
+  public async getStatusWithBitacora(): Promise<ProjectCatalogOption | null> {
+    const response = await this.apiService.get<unknown>(
+      this.statusWithBitacoraEndpoint,
+    );
+    return this.normalizeSingleCatalogOption(response);
+  }
+
   private normalizeCatalog(response: unknown): ProjectCatalogOption[] {
     return this.unwrapArray<Record<string, unknown>>(response)
-      .map((item) => {
+      .map((item): ProjectCatalogOption | null => {
         const rawId = item['id'] ?? item['value'] ?? item['code'];
         const rawName =
           item['name'] ?? item['label'] ?? item['description'] ?? item['title'];
+        const rawCode = item['code'] ?? item['statusCode'] ?? item['value'];
 
         if (
           !this.isPrimitive(rawId) ||
@@ -105,9 +123,33 @@ export class ProjectsService {
         return {
           id: rawId,
           name: rawName.trim(),
+          code:
+            typeof rawCode === 'string' || typeof rawCode === 'number'
+              ? this.toStatusCode(String(rawCode))
+              : this.toStatusCode(rawName.trim()),
         };
       })
       .filter((item): item is ProjectCatalogOption => item !== null);
+  }
+
+  private normalizeSingleCatalogOption(
+    response: unknown,
+  ): ProjectCatalogOption | null {
+    if (response && typeof response === 'object' && !Array.isArray(response)) {
+      const objectResponse = response as Record<string, unknown>;
+      const directOption = this.toCatalogOption(objectResponse);
+      if (directOption !== null) {
+        return directOption;
+      }
+
+      const data = objectResponse['data'];
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        return this.toCatalogOption(data as Record<string, unknown>);
+      }
+    }
+
+    const options = this.normalizeCatalog(response);
+    return options[0] ?? null;
   }
 
   private normalizeProjectList(response: unknown): ProjectListItem[] {
@@ -122,7 +164,8 @@ export class ProjectsService {
           'Sin nombre',
         );
         const clientId =
-          this.toId(project['clientId']) ?? this.toIdNested(project, 'client', 'id');
+          this.toId(project['clientId']) ??
+          this.toIdNested(project, 'client', 'id');
         const clientName = this.toString(
           project['clientName'] ??
             this.readNested(project, 'client', 'name') ??
@@ -130,7 +173,8 @@ export class ProjectsService {
           'Sin cliente',
         );
         const sellerId =
-          this.toId(project['sellerId']) ?? this.toIdNested(project, 'seller', 'id');
+          this.toId(project['sellerId']) ??
+          this.toIdNested(project, 'seller', 'id');
         const sellerName = this.toString(
           project['sellerName'] ??
             this.readNested(project, 'seller', 'name') ??
@@ -271,8 +315,60 @@ export class ProjectsService {
     return status
       .trim()
       .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replaceAll('-', '_')
       .replaceAll(' ', '_');
+  }
+
+  private toCatalogOption(
+    item: Record<string, unknown>,
+  ): ProjectCatalogOption | null {
+    const rawId = item['id'] ?? item['value'] ?? item['code'];
+    const rawName =
+      item['name'] ?? item['label'] ?? item['description'] ?? item['title'];
+    const rawCode = item['code'] ?? item['statusCode'] ?? item['value'];
+
+    if (
+      !this.isPrimitive(rawId) ||
+      typeof rawName !== 'string' ||
+      !rawName.trim()
+    ) {
+      return null;
+    }
+
+    return {
+      id: rawId,
+      name: rawName.trim(),
+      code:
+        typeof rawCode === 'string' || typeof rawCode === 'number'
+          ? this.toStatusCode(String(rawCode))
+          : this.toStatusCode(rawName.trim()),
+    };
+  }
+
+  private extractCreatedProjectId(response: unknown): string | number | null {
+    if (!response || typeof response !== 'object') {
+      return null;
+    }
+
+    const objectResponse = response as Record<string, unknown>;
+    const directId = this.toId(objectResponse['id']);
+    if (directId !== null) {
+      return directId;
+    }
+
+    const data = objectResponse['data'];
+    if (data && typeof data === 'object') {
+      return this.toId((data as Record<string, unknown>)['id']);
+    }
+
+    const project = objectResponse['project'];
+    if (project && typeof project === 'object') {
+      return this.toId((project as Record<string, unknown>)['id']);
+    }
+
+    return null;
   }
 
   private isPrimitive(value: unknown): value is string | number {

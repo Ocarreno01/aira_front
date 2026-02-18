@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   FormControl,
   FormGroup,
@@ -12,6 +13,7 @@ import {
   ProjectListItem,
   ProjectsService,
 } from '../../../../services/projects.service';
+import { NegotiationsService } from '../../../../services/negotiations.service';
 
 export interface EditProjectDialogData {
   project: ProjectListItem;
@@ -27,7 +29,10 @@ export interface EditProjectDialogResult {
   templateUrl: './edit-project-dialog.component.html',
 })
 export class EditProjectDialogComponent implements OnInit {
+  private readonly defaultNegotiationStatusCode = 'en_negociacion';
+
   private readonly projectsService = inject(ProjectsService);
+  private readonly negotiationsService = inject(NegotiationsService);
   private readonly dialogRef = inject(
     MatDialogRef<EditProjectDialogComponent, EditProjectDialogResult>,
   );
@@ -37,6 +42,7 @@ export class EditProjectDialogComponent implements OnInit {
   public isUpdatingProject = false;
   public catalogLoadError = '';
   public updateError = '';
+  public statusWithBitacoraCode = this.defaultNegotiationStatusCode;
   public clients: ProjectCatalogOption[] = [];
   public sellers: ProjectCatalogOption[] = [];
   public statuses: ProjectCatalogOption[] = [];
@@ -58,6 +64,9 @@ export class EditProjectDialogComponent implements OnInit {
     }),
     statusId: new FormControl<string | number | null>(null, {
       validators: [Validators.required],
+    }),
+    negotiationDescription: new FormControl('', {
+      nonNullable: true,
     }),
     estimatedValue: new FormControl<number | null>(null, {
       validators: [Validators.required, Validators.min(1)],
@@ -81,6 +90,11 @@ export class EditProjectDialogComponent implements OnInit {
   }
 
   public ngOnInit(): void {
+    this.f.statusId.valueChanges.subscribe(() => {
+      this.updateNegotiationValidators();
+    });
+
+    void this.loadStatusWithBitacora();
     void this.loadCatalogs();
   }
 
@@ -100,6 +114,8 @@ export class EditProjectDialogComponent implements OnInit {
 
     const value = this.editProjectForm.getRawValue();
     const projectName = value.projectName.trim();
+    const shouldCreateNegotiation = this.shouldShowNegotiationForm();
+    const negotiationDescription = value.negotiationDescription.trim();
 
     if (
       !projectName ||
@@ -109,6 +125,12 @@ export class EditProjectDialogComponent implements OnInit {
       value.statusId === null ||
       value.estimatedValue === null
     ) {
+      return;
+    }
+
+    if (shouldCreateNegotiation && !negotiationDescription) {
+      this.f.negotiationDescription.markAsTouched();
+      this.updateNegotiationValidators();
       return;
     }
 
@@ -124,6 +146,15 @@ export class EditProjectDialogComponent implements OnInit {
         projectStatusId: value.statusId,
         estimatedValue: value.estimatedValue,
       });
+
+      if (shouldCreateNegotiation) {
+        await this.createNegotiationForProject(
+          this.dialogData.project.id,
+          value.clientId,
+          value.sellerId,
+          negotiationDescription,
+        );
+      }
 
       this.dialogRef.close({
         updated: true,
@@ -155,6 +186,7 @@ export class EditProjectDialogComponent implements OnInit {
       this.projectTypes = projectTypes;
 
       this.resolveMissingSelectionsFromNames();
+      this.updateNegotiationValidators();
     } catch (error) {
       console.error('Error loading project catalogs', error);
       this.catalogLoadError =
@@ -213,6 +245,103 @@ export class EditProjectDialogComponent implements OnInit {
   }
 
   private normalizeText(value: string): string {
-    return value.trim().toLowerCase().replaceAll(' ', '_');
+    return value
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replaceAll('-', '_')
+      .replaceAll(' ', '_');
+  }
+
+  public shouldShowNegotiationForm(): boolean {
+    return (
+      this.isNegotiationStatusSelected() && !this.startedWithNegotiationStatus()
+    );
+  }
+
+  public isNegotiationStatusSelected(): boolean {
+    const selectedStatusId = this.f.statusId.value;
+    if (selectedStatusId === null) {
+      return false;
+    }
+
+    const selectedStatus = this.statuses.find(
+      (status) => String(status.id) === String(selectedStatusId),
+    );
+    const statusCode = this.normalizeText(
+      selectedStatus?.code ?? selectedStatus?.name ?? String(selectedStatusId),
+    );
+
+    return statusCode === this.statusWithBitacoraCode;
+  }
+
+  private updateNegotiationValidators(): void {
+    const descriptionControl = this.f.negotiationDescription;
+
+    if (this.shouldShowNegotiationForm()) {
+      descriptionControl.setValidators([Validators.required, Validators.minLength(5)]);
+    } else {
+      descriptionControl.clearValidators();
+      descriptionControl.setValue('', { emitEvent: false });
+    }
+
+    descriptionControl.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private async createNegotiationForProject(
+    projectId: string | number,
+    clientId: string | number,
+    sellerId: string | number,
+    description: string,
+  ): Promise<void> {
+    try {
+      await this.negotiationsService.createNegotiation({
+        projectId,
+        clientId,
+        sellerId,
+        description,
+      });
+    } catch (error) {
+      if (this.isConflictError(error)) {
+        return;
+      }
+
+      throw error;
+    }
+  }
+
+  private isConflictError(error: unknown): boolean {
+    if (error instanceof HttpErrorResponse) {
+      return error.status === 409;
+    }
+
+    return false;
+  }
+
+  private startedWithNegotiationStatus(): boolean {
+    return (
+      this.normalizeText(this.dialogData.project.statusCode) ===
+      this.statusWithBitacoraCode
+    );
+  }
+
+  private async loadStatusWithBitacora(): Promise<void> {
+    try {
+      const statusWithBitacora =
+        await this.projectsService.getStatusWithBitacora();
+
+      if (!statusWithBitacora) {
+        return;
+      }
+
+      this.statusWithBitacoraCode = this.normalizeText(
+        statusWithBitacora.code ?? statusWithBitacora.name,
+      );
+      this.updateNegotiationValidators();
+    } catch (error) {
+      console.error('Error loading statusWithBitacora', error);
+      this.statusWithBitacoraCode = this.defaultNegotiationStatusCode;
+    }
   }
 }
