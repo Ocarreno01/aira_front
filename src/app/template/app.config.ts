@@ -1,5 +1,6 @@
 import {
   ApplicationConfig,
+  LOCALE_ID,
   provideZoneChangeDetection,
   importProvidersFrom,
 } from '@angular/core';
@@ -31,6 +32,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    {
+      provide: LOCALE_ID,
+      useValue: 'es-CO',
+    },
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(
       routes,

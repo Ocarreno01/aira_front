@@ -25,4 +25,12 @@ export const navItems: NavItem[] = [
     iconName: 'solar:clipboard-list-line-duotone',
     route: '/projects/negotiation-list',
   },
+  {
+    navCap: 'Reportes',
+  },
+  {
+    displayName: 'Reportes',
+    iconName: 'solar:chart-square-line-duotone',
+    route: '/projects/reports',
+  },
 ];

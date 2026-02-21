@@ -1,0 +1,450 @@
+<mat-card class="cardWithShadow theme-card">
+  <div
+    class="p-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <mat-card-title class="mb-0">Reportes</mat-card-title>
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      [disabled]="!canDownloadReport()"
+      (click)="downloadExcelReport()"
+    >
+      Descargar Excel
+    </button>
+  </div>
+
+  <mat-card-content class="border-t border-border p-6!">
+    @if (isLoadingData) {
+      <div class="h-[260px] flex items-center justify-center">
+        <mat-progress-spinner
+          mode="indeterminate"
+          diameter="42"
+        ></mat-progress-spinner>
+      </div>
+    } @else if (reportsError && !isGeneratingReport && !reportGenerated) {
+      <div class="h-[260px] flex flex-col items-center justify-center gap-3">
+        <span class="text-sm text-error">{{ reportsError }}</span>
+        <button mat-stroked-button type="button" (click)="loadBaseData()">
+          Reintentar
+        </button>
+      </div>
+    } @else {
+      <div class="rounded border border-border p-4">
+        <p class="text-sm font-semibold mb-4">Filtros del reporte</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          <mat-form-field appearance="outline" class="w-full mb-0!">
+            <mat-label>Proyecto</mat-label>
+            <mat-select
+              multiple
+              [value]="selectedProjectKeys"
+              (selectionChange)="
+                selectedProjectKeys = $event.value; onFiltersChanged()
+              "
+            >
+              @for (option of projectOptions; track option.value) {
+                <mat-option [value]="option.value">{{
+                  option.label
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full mb-0!">
+            <mat-label>Vendedor</mat-label>
+            <mat-select
+              multiple
+              [value]="selectedSellerKeys"
+              (selectionChange)="
+                selectedSellerKeys = $event.value; onFiltersChanged()
+              "
+            >
+              @for (option of sellerOptions; track option.value) {
+                <mat-option [value]="option.value">{{
+                  option.label
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full mb-0!">
+            <mat-label>Cliente</mat-label>
+            <mat-select
+              multiple
+              [value]="selectedClientKeys"
+              (selectionChange)="
+                selectedClientKeys = $event.value; onFiltersChanged()
+              "
+            >
+              @for (option of clientOptions; track option.value) {
+                <mat-option [value]="option.value">{{
+                  option.label
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full mb-0!">
+            <mat-label>Tipo de proyecto</mat-label>
+            <mat-select
+              multiple
+              [value]="selectedProjectTypeKeys"
+              (selectionChange)="
+                selectedProjectTypeKeys = $event.value; onFiltersChanged()
+              "
+            >
+              @for (option of projectTypeOptions; track option.value) {
+                <mat-option [value]="option.value">{{
+                  option.label
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full mb-0!">
+            <mat-label>Estado</mat-label>
+            <mat-select
+              multiple
+              [value]="selectedStatusKeys"
+              (selectionChange)="
+                selectedStatusKeys = $event.value; onFiltersChanged()
+              "
+            >
+              @for (option of statusOptions; track option.value) {
+                <mat-option [value]="option.value">{{
+                  option.label
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full mb-0!">
+            <mat-label>Valor estimado</mat-label>
+            <mat-select
+              multiple
+              [value]="selectedEstimatedValueKeys"
+              (selectionChange)="
+                selectedEstimatedValueKeys = $event.value; onFiltersChanged()
+              "
+            >
+              @for (option of estimatedValueOptions; track option.value) {
+                <mat-option [value]="option.value">{{
+                  option.label
+                }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="isGeneratingReport || !hasSourceProjects()"
+            (click)="generateReport()"
+          >
+            Generar reporte
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="isGeneratingReport"
+            (click)="clearFilters()"
+          >
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+
+      @if (isGeneratingReport) {
+        <div class="h-[220px] flex items-center justify-center">
+          <mat-progress-spinner
+            mode="indeterminate"
+            diameter="40"
+          ></mat-progress-spinner>
+        </div>
+      } @else if (reportsError) {
+        <div
+          class="mt-4 rounded border border-error bg-light-error p-4 text-error"
+        >
+          <p class="text-sm">{{ reportsError }}</p>
+        </div>
+      } @else if (!reportGenerated) {
+        <div class="mt-6 rounded border border-border p-5 text-sm opacity-80">
+          Selecciona uno o varios filtros y haz clic en "Generar reporte".
+        </div>
+      } @else {
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="rounded border border-border p-4">
+            <p class="text-xs uppercase opacity-70">Proyectos</p>
+            <p class="text-xl font-semibold mt-1">
+              {{ reportProjects.length }}
+            </p>
+          </div>
+          <div class="rounded border border-border p-4">
+            <p class="text-xs uppercase opacity-70">Negociaciones</p>
+            <p class="text-xl font-semibold mt-1">
+              {{ reportNegotiations.length }}
+            </p>
+          </div>
+          <div class="rounded border border-border p-4">
+            <p class="text-xs uppercase opacity-70">Logs</p>
+            <p class="text-xl font-semibold mt-1">{{ reportLogs.length }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="text-base font-semibold mb-3">Información de proyectos</h3>
+
+          @if (!reportProjects.length) {
+            <div class="rounded border border-border p-5 text-sm opacity-70">
+              Sin datos de proyectos para los filtros seleccionados.
+            </div>
+          } @else {
+            <div class="relative overflow-auto rounded border border-border">
+              <table mat-table [dataSource]="reportProjects" class="min-w-full">
+                <ng-container matColumnDef="project">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Proyecto
+                  </th>
+                  <td mat-cell *matCellDef="let item">{{ item.name }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="client">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Cliente
+                  </th>
+                  <td mat-cell *matCellDef="let item">{{ item.clientName }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="seller">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Vendedor
+                  </th>
+                  <td mat-cell *matCellDef="let item">{{ item.sellerName }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="projectType">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Tipo de proyecto
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.businessTypeName }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Estado
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ formatStatusLabel(item.statusName) | titlecase }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="estimatedValue">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Valor estimado
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ formatEstimatedValue(item.estimatedValue) }}
+                  </td>
+                </ng-container>
+
+                <tr
+                  mat-header-row
+                  *matHeaderRowDef="displayedColumnsProjectReport"
+                ></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let row; columns: displayedColumnsProjectReport"
+                ></tr>
+              </table>
+            </div>
+          }
+        </div>
+
+        <div class="mt-8">
+          <h3 class="text-base font-semibold mb-3">
+            Información de negociaciones
+          </h3>
+
+          @if (!reportNegotiations.length) {
+            <div class="rounded border border-border p-5 text-sm opacity-70">
+              Sin datos de negociaciones para los filtros seleccionados.
+            </div>
+          } @else {
+            <div class="relative overflow-auto rounded border border-border">
+              <table
+                mat-table
+                [dataSource]="reportNegotiations"
+                class="min-w-full"
+              >
+                <ng-container matColumnDef="project">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Proyecto
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.projectName }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="client">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Cliente
+                  </th>
+                  <td mat-cell *matCellDef="let item">{{ item.clientName }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="createdAt">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Fecha de creación
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ formatDateLabel(item.createdAt) }}
+                  </td>
+                </ng-container>
+
+                <tr
+                  mat-header-row
+                  *matHeaderRowDef="displayedColumnsNegotiationReport"
+                ></tr>
+                <tr
+                  mat-row
+                  *matRowDef="
+                    let row;
+                    columns: displayedColumnsNegotiationReport
+                  "
+                ></tr>
+              </table>
+            </div>
+          }
+        </div>
+
+        <div class="mt-8">
+          <h3 class="text-base font-semibold mb-3">Logs de negociación</h3>
+
+          @if (!reportLogs.length) {
+            <div class="rounded border border-border p-5 text-sm opacity-70">
+              Sin logs de negociación para los filtros seleccionados.
+            </div>
+          } @else {
+            <div class="relative overflow-auto rounded border border-border">
+              <table mat-table [dataSource]="reportLogs" class="min-w-full">
+                <ng-container matColumnDef="negotiationId">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    ID negociación
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.negotiationId }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="project">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Proyecto
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.projectName }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="seller">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Vendedor
+                  </th>
+                  <td mat-cell *matCellDef="let item">{{ item.sellerName }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="date">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Fecha
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ formatDateLabel(item.date) }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="description">
+                  <th
+                    mat-header-cell
+                    *matHeaderCellDef
+                    class="font-semibold text-sm"
+                  >
+                    Descripción
+                  </th>
+                  <td mat-cell *matCellDef="let item">
+                    {{ item.description }}
+                  </td>
+                </ng-container>
+
+                <tr
+                  mat-header-row
+                  *matHeaderRowDef="displayedColumnsLogsReport"
+                ></tr>
+                <tr
+                  mat-row
+                  *matRowDef="let row; columns: displayedColumnsLogsReport"
+                ></tr>
+              </table>
+            </div>
+          }
+        </div>
+      }
+    }
+  </mat-card-content>
+</mat-card>
