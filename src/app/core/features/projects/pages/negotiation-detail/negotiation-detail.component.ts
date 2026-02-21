@@ -29,9 +29,11 @@ export class NegotiationDetailComponent implements OnInit {
   public negotiationDetailError = '';
   public negotiationId = '';
   public negotiationDetail: NegotiationDetail | null = null;
+  private returnRoute: string[] = ['/projects/negotiation-list'];
 
   public ngOnInit(): void {
     this.negotiationId = this.route.snapshot.paramMap.get('id') ?? '';
+    this.resolveReturnRoute();
 
     if (!this.negotiationId) {
       this.negotiationDetailError = 'No se encontró el id de la negociación.';
@@ -70,7 +72,7 @@ export class NegotiationDetailComponent implements OnInit {
   }
 
   public goBack(): void {
-    void this.router.navigate(['/projects/negotiation-list']);
+    void this.router.navigate(this.returnRoute);
   }
 
   public openCreateLogDialog(): void {
@@ -119,5 +121,16 @@ export class NegotiationDetailComponent implements OnInit {
       this.dangerThresholdInDays * 24 * 60 * 60 * 1000;
 
     return elapsedMilliseconds >= thresholdMilliseconds;
+  }
+
+  private resolveReturnRoute(): void {
+    const from = this.route.snapshot.queryParamMap.get('from');
+
+    if (from === 'project-list') {
+      this.returnRoute = ['/projects/project-list'];
+      return;
+    }
+
+    this.returnRoute = ['/projects/negotiation-list'];
   }
 }

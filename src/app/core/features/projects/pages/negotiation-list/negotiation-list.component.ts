@@ -59,12 +59,16 @@ export class NegotiationListComponent implements OnInit {
     }
   }
 
-  public openNegotiationDetail(negotiationId: string): void {
+  public openNegotiationDetail(negotiationId: string | number | null): void {
     if (!negotiationId) {
       return;
     }
 
-    void this.router.navigate(['/projects/negotiation-list', negotiationId]);
+    void this.router.navigate(['/projects/negotiation-list', negotiationId], {
+      queryParams: {
+        from: 'negotiation-list',
+      },
+    });
   }
 
   public openCreateLogDialog(negotiation: NegotiationListItem): void {

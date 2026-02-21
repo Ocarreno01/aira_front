@@ -77,7 +77,7 @@ export class EditProjectDialogComponent implements OnInit {
     const project = this.dialogData.project;
     this.editProjectForm.patchValue({
       projectName: project.name,
-      estimatedValue: project.estimatedValue,
+      estimatedValue: this.toNumber(project.estimatedValue),
       clientId: project.clientId,
       sellerId: project.sellerId,
       projectTypeId: project.projectTypeId,
@@ -252,6 +252,21 @@ export class EditProjectDialogComponent implements OnInit {
       .replace(/[\u0300-\u036f]/g, '')
       .replaceAll('-', '_')
       .replaceAll(' ', '_');
+  }
+
+  private toNumber(value: string | number): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+
+    return null;
   }
 
   public shouldShowNegotiationForm(): boolean {

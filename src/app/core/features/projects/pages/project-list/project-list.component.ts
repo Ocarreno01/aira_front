@@ -2,6 +2,7 @@ import { CurrencyPipe, TitleCasePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '../../../../material.module';
+import { Router } from '@angular/router';
 import { ConfirmProjectDeleteDialogComponent } from './components/confirm-project-delete-dialog/confirm-project-delete-dialog.component';
 import {
   EditProjectDialogComponent,
@@ -23,6 +24,7 @@ import {
 })
 export class ProjectListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
   private readonly projectsService = inject(ProjectsService);
 
   public isLoadingProjects = true;
@@ -52,6 +54,7 @@ export class ProjectListComponent implements OnInit {
 
     try {
       this.dataSourceProjectList = await this.projectsService.getProjects();
+      console.log('this.dataSourceProjectList ', this.dataSourceProjectList);
       this.applySearchFilter(this.searchProjectTerm);
     } catch (error) {
       console.error('Error loading projects', error);
@@ -122,7 +125,24 @@ export class ProjectListComponent implements OnInit {
   }
 
   public canViewNegotiation(project: ProjectListItem): boolean {
-    return this.normalizeStatus(project.statusCode) === 'en_negociacion';
+    return (
+      this.normalizeStatus(project.statusCode) === 'en_negociacion' &&
+      !!project.negotiationId
+    );
+  }
+
+  public openNegotiationDetail(
+    negotiationId: string | number | null,
+  ): void {
+    if (!negotiationId) {
+      return;
+    }
+
+    void this.router.navigate(['/projects/negotiation-list', negotiationId], {
+      queryParams: {
+        from: 'project-list',
+      },
+    });
   }
 
   public applySearchFilter(value: string): void {
@@ -148,9 +168,9 @@ export class ProjectListComponent implements OnInit {
     const baseClass = 'rounded font-semibold p-6 py-1 text-xs';
     const normalizedStatus = this.normalizeStatus(status);
     const statusClassMap: Record<string, string> = {
-      oportunidad: `bg-light-warning text-warning ${baseClass}`,
-      cotizacion_enviada: `bg-light-error text-error ${baseClass}`,
-      en_negociacion: `bg-light-success text-success ${baseClass}`,
+      oportunidad: `bg-light-info text-info ${baseClass}`,
+      cotizacion_enviada: `bg-light-primary text-primary ${baseClass}`,
+      en_negociacion: `bg-light-warning text-warning ${baseClass}`,
       vendido: `bg-light-success text-success ${baseClass}`,
       facturado: `bg-light-success text-success ${baseClass}`,
     };

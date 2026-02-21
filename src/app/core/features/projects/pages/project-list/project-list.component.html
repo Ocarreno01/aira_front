@@ -67,11 +67,11 @@
         }
       </div>
     } @else {
-      <div class="relative overflow-x-hidden">
+      <div class="relative overflow-auto">
         <table
           mat-table
           [dataSource]="filteredDataSourceProjectList"
-          class="w-full table-fixed"
+          class="min-w-full"
         >
           <ng-container matColumnDef="projectName">
             <th
@@ -86,7 +86,9 @@
               mat-cell
               *matCellDef="let element"
             >
-              <h6 class="text-sm font-semibold leading-5 whitespace-normal break-words">
+              <h6
+                class="text-sm font-semibold leading-5 whitespace-normal break-words"
+              >
                 {{ element.name }}
               </h6>
             </td>
@@ -181,8 +183,15 @@
               mat-cell
               *matCellDef="let element"
             >
-              <span [class]="getStatusClass(element.statusCode || element.statusName)">
-                {{ formatStatusLabel(element.statusName || element.statusCode) | titlecase }}
+              <span
+                [class]="
+                  getStatusClass(element.statusCode || element.statusName)
+                "
+              >
+                {{
+                  formatStatusLabel(element.statusName || element.statusCode)
+                    | titlecase
+                }}
               </span>
             </td>
           </ng-container>
@@ -211,7 +220,12 @@
                   <span>Editar</span>
                 </button>
                 @if (canViewNegotiation(element)) {
-                  <button mat-menu-item>
+                  <button
+                    mat-menu-item
+                    (click)="
+                      openNegotiationDetail(element.negotiationId ?? null)
+                    "
+                  >
                     <mat-icon>bolt</mat-icon>
                     <span>Ver negociación</span>
                   </button>

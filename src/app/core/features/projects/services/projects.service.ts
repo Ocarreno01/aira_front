@@ -10,16 +10,26 @@ export interface ProjectCatalogOption {
 export interface ProjectListItem {
   id: string | number;
   name: string;
+  project: string;
   clientId: string | number | null;
   clientName: string;
   sellerId: string | number | null;
   sellerName: string;
+  sellerEmail: string;
+  businessTypeId: string | number | null;
+  typeId: string | number | null;
   projectTypeId: string | number | null;
   businessTypeName: string;
+  typeName: string;
+  statusId: string | number | null;
   projectStatusId: string | number | null;
   statusCode: string;
   statusName: string;
-  estimatedValue: number;
+  generaBitacora: boolean;
+  negotiationId?: string | number | null;
+  estimatedValue: string | number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateProjectPayload {
@@ -181,58 +191,86 @@ export class ProjectsService {
             this.readNested(project, 'seller', 'fullName'),
           'Sin vendedor',
         );
-        const projectTypeId =
-          this.toId(project['projectTypeId']) ??
+        const sellerEmail = this.toString(
+          project['sellerEmail'] ?? this.readNested(project, 'seller', 'email'),
+          '',
+        );
+        const businessTypeId =
           this.toId(project['businessTypeId']) ??
-          this.toIdNested(project, 'projectType', 'id') ??
-          this.toIdNested(project, 'businessType', 'id');
+          this.toId(project['typeId']) ??
+          this.toId(project['projectTypeId']) ??
+          this.toIdNested(project, 'businessType', 'id') ??
+          this.toIdNested(project, 'type', 'id') ??
+          this.toIdNested(project, 'projectType', 'id');
         const businessTypeName = this.toString(
           project['businessTypeName'] ??
             project['businessType'] ??
-            this.readNested(project, 'projectType', 'name') ??
             this.readNested(project, 'businessType', 'name') ??
+            this.readNested(project, 'projectType', 'name') ??
             this.readNested(project, 'type', 'name'),
           'Sin tipo',
         );
-        const projectStatusId =
-          this.toId(project['projectStatusId']) ??
+        const statusId =
           this.toId(project['statusId']) ??
-          this.toIdNested(project, 'projectStatus', 'id') ??
-          this.toIdNested(project, 'status', 'id');
+          this.toId(project['projectStatusId']) ??
+          this.toIdNested(project, 'status', 'id') ??
+          this.toIdNested(project, 'projectStatus', 'id');
         const rawStatusName = this.toString(
           project['statusName'] ??
             project['status'] ??
-            this.readNested(project, 'projectStatus', 'name') ??
             this.readNested(project, 'status', 'name') ??
-            this.readNested(project, 'projectStatus', 'code') ??
+            this.readNested(project, 'projectStatus', 'name') ??
             this.readNested(project, 'status', 'code'),
           'desconocido',
         );
         const statusCode = this.toString(
           project['statusCode'] ??
-            this.readNested(project, 'projectStatus', 'code') ??
-            this.readNested(project, 'status', 'code'),
+            this.readNested(project, 'status', 'code') ??
+            this.readNested(project, 'projectStatus', 'code'),
           this.toStatusCode(rawStatusName),
         );
+        const estimatedValue =
+          this.toNumber(
+            project['estimatedValue'] ??
+              project['estimatedAmount'] ??
+              project['amount'],
+          ) ?? 0;
+        const createdAt = this.toString(project['createdAt'], '');
+        const updatedAt = this.toString(project['updatedAt'], '');
+        const generaBitacora =
+          this.toBoolean(project['generaBitacora']) ??
+          this.toBoolean(this.readNested(project, 'status', 'generaBitacora')) ??
+          this.toBoolean(
+            this.readNested(project, 'projectStatus', 'generaBitacora'),
+          ) ??
+          false;
+        const negotiationId =
+          this.toId(project['negotiationId']) ??
+          this.toIdNested(project, 'negotiation', 'id');
 
         return {
           id,
           name,
+          project: name,
           clientId,
           clientName,
           sellerId,
           sellerName,
-          projectTypeId,
+          sellerEmail,
+          businessTypeId,
+          typeId: businessTypeId,
+          projectTypeId: businessTypeId,
           businessTypeName,
-          projectStatusId,
+          typeName: businessTypeName,
+          statusId,
+          projectStatusId: statusId,
           statusCode,
           statusName: rawStatusName,
-          estimatedValue:
-            this.toNumber(
-              project['estimatedValue'] ??
-                project['estimatedAmount'] ??
-                project['amount'],
-            ) ?? 0,
+          generaBitacora,
+          negotiationId,
+          estimatedValue: estimatedValue.toString(),
+          createdAt,
+          updatedAt,
         };
       },
     );
@@ -253,6 +291,11 @@ export class ProjectsService {
       const items = objectResponse['items'];
       if (Array.isArray(items)) {
         return items as T[];
+      }
+
+      const projects = objectResponse['projects'];
+      if (Array.isArray(projects)) {
+        return projects as T[];
       }
     }
 
@@ -297,6 +340,35 @@ export class ProjectsService {
       const parsed = Number(value);
       if (Number.isFinite(parsed)) {
         return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  private toBoolean(value: unknown): boolean | null {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const normalizedValue = value.trim().toLowerCase();
+      if (normalizedValue === 'true') {
+        return true;
+      }
+
+      if (normalizedValue === 'false') {
+        return false;
+      }
+    }
+
+    if (typeof value === 'number') {
+      if (value === 1) {
+        return true;
+      }
+
+      if (value === 0) {
+        return false;
       }
     }
 
